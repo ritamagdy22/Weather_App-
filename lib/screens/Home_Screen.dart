@@ -12,7 +12,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+
+      // weather cases ( cloudy , rainy , sunny )
   Widget getWeatherIcon(int code) {
     switch (code) {
       case >= 200 && < 300:
@@ -32,6 +35,39 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         return Image.asset('assets/7.png');
     }
+  }
+
+   late AnimationController _controller;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Create AnimationController
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    );
+
+    // Rotation Animation for the Sun
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 6.28).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.linear),
+    );
+
+    // Fade animation for text
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+
+    _controller.repeat(); // Loop the animation
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -94,19 +130,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '📍 ${state.weather.areaName}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w300),
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: Text(
+                              '📍 ${state.weather.areaName}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w300),
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Good Morning',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold),
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: const Text(
+                              'Good Morning',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.bold),
+                            ),
                           ),
                           getWeatherIcon(state.weather.weatherConditionCode!),
                           Center(
@@ -145,9 +187,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Image.asset(
-                                    'assets/11.png',
-                                    scale: 8,
+                                  Transform.rotate(
+                                    angle: _rotationAnimation.value,
+
+                                    child: Image.asset(
+                                      'assets/11.png',
+                                      scale: 8,
+                                    ),
                                   ),
                                   const SizedBox(width: 5),
                                   Column(
